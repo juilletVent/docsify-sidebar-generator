@@ -33,9 +33,8 @@
                             <addClasspath>true</addClasspath>
                         </manifest>
                         <manifestEntries>
-                            <Main-Class>SlideBar</Main-Class>
+                            <Main-Class>SideBar</Main-Class>
                         </manifestEntries>
-
                     </archive>
                 </configuration>
             </plugin>
