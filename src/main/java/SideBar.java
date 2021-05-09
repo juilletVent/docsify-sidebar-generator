@@ -5,6 +5,8 @@ import java.io.*;
  */
 public class SideBar {
 
+    private final static String IGNORE_FILE_PREFIX = "_";
+
     public static void main(String[] args) {
         String path = SideBar.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
@@ -52,7 +54,7 @@ public class SideBar {
             // 跳过当前文件
             boolean isCurrentFile = f.getName().endsWith("docsify-slidebar") && f.getName().endsWith(".jar");
             boolean isDotPrefix = f.getName().startsWith(".");
-            boolean isUnderlinePrefix = f.getName().startsWith("_");
+            boolean isUnderlinePrefix = f.getName().startsWith(IGNORE_FILE_PREFIX);
             if (isCurrentFile || isDotPrefix || isUnderlinePrefix) {
                 continue;
             }
@@ -64,6 +66,9 @@ public class SideBar {
     }
 
     private static String fileSlideBar(File file, int level, String rootPath) {
+        if (file.getName().startsWith(IGNORE_FILE_PREFIX)) {
+            return "";
+        }
         return getIndent(level) + "- [" + getSlideBarTitle(file) + "](" + fileNameSpecialHandle(file, rootPath) + ")\n";
     }
 
@@ -89,6 +94,9 @@ public class SideBar {
     }
 
     private static String dicSlideBar(File file, int level, String rootPath) {
+        if (file.getName().startsWith(IGNORE_FILE_PREFIX)) {
+            return "";
+        }
         StringBuilder result = new StringBuilder(getIndent(level) + "- " + file.getName() + "\n");
 
         File[] subFiles = file.listFiles();
@@ -98,7 +106,7 @@ public class SideBar {
         for (File f : subFiles) {
             if (f.isDirectory()) {
                 result.append(dicSlideBar(f, level + 1, rootPath));
-            } else if(f.getName().endsWith(".md")) {
+            } else if (f.getName().endsWith(".md")) {
                 result.append(fileSlideBar(f, level + 1, rootPath));
             }
         }
