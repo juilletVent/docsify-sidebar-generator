@@ -1,4 +1,7 @@
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * 生成_sidebar.md文件
@@ -9,7 +12,6 @@ public class SideBar {
 
     public static void main(String[] args) {
         String path = SideBar.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-
         path = path.substring(0, path.lastIndexOf(getDicSeparator(path)));
         StringBuilder text = getSlideBarText(path);
         try {
@@ -51,15 +53,20 @@ public class SideBar {
 
         int rootLevel = 0;
         for (File f : subFiles) {
+            String ignorePatternStr = "node_modules";
             // 跳过当前文件
+            boolean ignorePattern = Pattern.matches(ignorePatternStr, f.getName());
             boolean isCurrentFile = f.getName().endsWith("docsify-slidebar") && f.getName().endsWith(".jar");
             boolean isDotPrefix = f.getName().startsWith(".");
             boolean isUnderlinePrefix = f.getName().startsWith(IGNORE_FILE_PREFIX);
-            if (isCurrentFile || isDotPrefix || isUnderlinePrefix) {
+            if (isCurrentFile || isDotPrefix || isUnderlinePrefix || ignorePattern) {
                 continue;
             }
             if (f.isDirectory()) {
-                result.append(dicSlideBar(f, rootLevel, rootPath));
+                boolean isEmpty = dirIsEmpty(f);
+                if (!isEmpty) {
+                    result.append(dicSlideBar(f, rootLevel, rootPath));
+                }
             }
         }
         return result;
@@ -93,6 +100,24 @@ public class SideBar {
         return title.replaceAll("\\\\", "/");
     }
 
+    private static Boolean dirIsEmpty(File targetFile) {
+        boolean isEmpty = true;
+        for (File fileItem : targetFile.listFiles()) {
+            if (fileItem.getName().endsWith(".md")) {
+                isEmpty = false;
+                break;
+            }
+            if (fileItem.isDirectory()) {
+                boolean innerIsEmpty = dirIsEmpty(fileItem);
+                if (!innerIsEmpty) {
+                    isEmpty = false;
+                    break;
+                }
+            }
+        }
+        return isEmpty;
+    }
+
     private static String dicSlideBar(File file, int level, String rootPath) {
         if (file.getName().startsWith(IGNORE_FILE_PREFIX)) {
             return "";
@@ -105,7 +130,10 @@ public class SideBar {
         }
         for (File f : subFiles) {
             if (f.isDirectory()) {
-                result.append(dicSlideBar(f, level + 1, rootPath));
+                boolean isEmpty = dirIsEmpty(f);
+                if (!isEmpty) {
+                    result.append(dicSlideBar(f, level + 1, rootPath));
+                }
             } else if (f.getName().endsWith(".md")) {
                 result.append(fileSlideBar(f, level + 1, rootPath));
             }
